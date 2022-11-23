@@ -103,10 +103,34 @@ def value_iteration(mdp, gamma, epsilon):
     Returns:
         A python dictionary, with state (x, y) tuples as keys, and converged utilities as values.
     """
-
-    "*** YOUR CODE HERE***"
-    pass
-
+    #makes initial utility 
+    curU = dict.fromkeys(mdp.get_states())
+    for key in curU.keys():
+        curU[key] = mdp.get_reward(key)
+    while(True):
+        newU = dict.fromkeys(mdp.get_states())
+        change = 0.0
+        for s in mdp.get_states():
+            if mdp.is_terminal(s):
+                newU[s] = mdp.get_reward(s)
+                continue
+            action_sums = []
+            for action in mdp.get_actions(s):
+                action_probs = mdp.get_successor_probs(s, action)
+                if len(action_probs) == 0: break
+                sums = 0.0
+                for states in action_probs.keys():
+                    sums += action_probs[states] * curU[states]
+                action_sums.append(sums)
+            if len(action_probs) == 0:
+                print("Error!!!")
+            newU[s] = mdp.get_reward(s) + (max(action_sums) * gamma)
+            change = max(change, abs(newU[s]-curU[s]))
+        curU = newU
+        #print(ascii_grid_policy(derive_policy(mdp, curU)))
+        if change < epsilon:
+            break
+    return curU
 
 def derive_policy(mdp, utility):
     """Create a policy from an MDP and a set of utilities for each state.
